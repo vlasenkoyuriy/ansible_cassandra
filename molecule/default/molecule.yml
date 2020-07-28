@@ -9,44 +9,67 @@ lint: |
   set -ex
   yamllint -s .
   ansible-lint
-  flake8
 
 platforms:
   - name: node0
-    command: ${DOCKER_COMMAND:-"sleep infinity"}
+    image: docker.io/pycontribs/centos:7
+    pre_build_image: true
+    privileged: True
+    command: /sbin/init
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+    environment:
+      container: docker
+    restart_policy: on-failure
     groups:
       - cassandra
       - clustered
       - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
-    image: ${DOCKER_IMAGE:-debian}:${DOCKER_TAG_1:-9}
-    privileged: True
 
   - name: node1
-    command: ${DOCKER_COMMAND:-"sleep infinity"}
+    image: docker.io/pycontribs/centos:7
+    pre_build_image: true
+    privileged: True
+    command: /sbin/init
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+    environment:
+      container: docker
+    restart_policy: on-failure
     groups:
       - cassandra
       - clustered
-      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_2:-10}
-    image: ${DOCKER_IMAGE:-debian}:${DOCKER_TAG_2:-10}
-    privileged: True
+      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
 
   - name: node2
-    command: ${DOCKER_COMMAND:-"sleep infinity"}
+    image: docker.io/pycontribs/centos:7
+    pre_build_image: true
+    privileged: True
+    command: /sbin/init
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+    environment:
+      container: docker
+    restart_policy: on-failure
     groups:
       - cassandra
-      - standalone
+      - clustered
       - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
-    image: ${DOCKER_IMAGE:-debian}:${DOCKER_TAG_1:-9}
-    privileged: True
 
   - name: node3
-    command: ${DOCKER_COMMAND:-"sleep infinity"}
+    image: docker.io/pycontribs/centos:7
+    pre_build_image: true
+    privileged: True
+    command: /sbin/init
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+    environment:
+      container: docker
+    restart_policy: on-failure
     groups:
       - cassandra
-      - standalone
-      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_2:-10}
-    image: ${DOCKER_IMAGE:-debian}:${DOCKER_TAG_2:-10}
-    privileged: True
+      - clustered
+      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
 
 provisioner:
   name: ansible
