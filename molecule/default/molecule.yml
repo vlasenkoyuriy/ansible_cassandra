@@ -23,8 +23,8 @@ platforms:
     restart_policy: on-failure
     groups:
       - cassandra
-      - clustered
-      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
+      - cassandra_clustered
+      - cassandra_seed
 
   - name: node1
     image: docker.io/pycontribs/centos:7
@@ -38,8 +38,8 @@ platforms:
     restart_policy: on-failure
     groups:
       - cassandra
-      - clustered
-      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
+      - cassandra_clustered
+      - cassandra_seed
 
   - name: node2
     image: docker.io/pycontribs/centos:7
@@ -53,8 +53,7 @@ platforms:
     restart_policy: on-failure
     groups:
       - cassandra
-      - clustered
-      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
+      - cassandra_clustered
 
   - name: node3
     image: docker.io/pycontribs/centos:7
@@ -68,44 +67,23 @@ platforms:
     restart_policy: on-failure
     groups:
       - cassandra
-      - clustered
-      - ${DOCKER_IMAGE:-debian}${DOCKER_TAG_1:-9}
+      - cassandra_clustered
 
 provisioner:
   name: ansible
-
   config_options:
     defaults:
       callback_whitelist: "profile_tasks,timer"
-
   inventory:
     group_vars:
-      centos7:
-        cassandra_systemd_enabled: True
       centos8:
-        cassandra_systemd_enabled: True
         ansible_python_interpreter: python3
-      debian9:
-      debian10:
-        cassandra_15770_workaround: True
-      fedora30:
-        ansible_python_interpreter: python3
-        cassandra_systemd_enabled: True
-      fedora31:
-        ansible_python_interpreter: python3
-        cassandra_systemd_enabled: True
-      ubuntu18.04:
-      ubuntu20.04:
-        cassandra_15770_workaround: True
-
   log: True
-
   options:
     v: 1
 
 scenario:
   test_sequence:
-    # Pretty much the default test sequence, just added the check step.
     - lint
     - destroy
     - syntax
@@ -117,9 +95,7 @@ scenario:
     - verify
 
 verifier:
-
   name: testinfra
-
   options:
     connection: docker
     durations: 3

@@ -8,7 +8,7 @@ import re
 import testinfra.utils.ansible_runner
 
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
-    os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('clustered')
+    os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('cassandra_clustered')
 
 
 def get_config_path(host):

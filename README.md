@@ -1,7 +1,6 @@
 # ansible-role-cassandra
 
 [![Build Status](https://travis-ci.com/locp/ansible-role-cassandra.svg?branch=develop)](https://travis-ci.com/locp/ansible-role-cassandra)
-[![Gitter](https://badges.gitter.im/ansible-role-cassandra/community.svg)](https://gitter.im/ansible-role-cassandra/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Ansible role to install and configure
 [Apache Cassandra](http://cassandra.apache.org/).
@@ -23,12 +22,6 @@ executes this module.
 * python3-apt (python 3)
 
 ## Role Variables
-
-* `cassandra_15770_workaround`: (default: *False*)
-  [CASSANDRA-15770](https://issues.apache.org/jira/browse/CASSANDRA-15770)
-  affected Debian 10 and Ubuntu 20.04 it was subsequently fixed in versions
-  3.0.21, 3.11.7, 4.0.  As we are running our tests against 3.11.6 at the
-  moment, this applies the fix to `/etc/init.d/cassandra` if set to True.
 
 * `cassandra_cms_heap_new_size_mb`:
   A custom fact that returns a value (MB) that might be suitable to set the
@@ -172,7 +165,7 @@ configuration:
 
 ```YAML
 ---
-- name: Example Playbook for the locp.cassandra Role
+- name: Example Playbook
 
   hosts: cassandra
 
@@ -198,11 +191,6 @@ configuration:
             - seeds: "{{ ansible_default_ipv4.address }}"
       start_native_transport: true
     cassandra_configure_apache_repo: true
-    # Create an alternative directories structure for the Cassandra data.
-    # In this example, the will be a directory called /data owned by root
-    # with rwxr-xr-x permissions.  It will have a series of sub-directories
-    # all of which will be defaulted to being owned by the cassandra user
-    # with rwx------ permissions.
     cassandra_directories:
       root:
         group: root

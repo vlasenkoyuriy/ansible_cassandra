@@ -1,8 +1,26 @@
 ---
-# tasks file for cassandra
-- name: Import the Apache Cassandra Repository Tasks
-  include: apache_repo.yml
-  when: cassandra_configure_apache_repo|bool
+
+- name: Set Variables for Clustered Nodes
+  set_fact:
+    cassandra_cluster_name: "{{ cassandra_cluster_name }}"
+    cassandra_join_cluster: True
+    cassandra_seed: "{{ groups['cassandra_seed'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+  when: "'cassandra_clustered' in group_names"
+
+- name: Set Variables for Standalone Nodes
+  set_fact:
+    cassandra_cluster_name: Standalone
+    cassandra_seed: "{{ ansible_default_ipv4.address }}"
+  when: "'cassandra_standalone' is in group_names"
+
+- name: Configure the Apache Cassandra YUM Repository
+  yum_repository:
+    name: cassandra
+    baseurl: "https://www.apache.org/dist/cassandra/redhat/{{ cassandra_repo_apache_release }}/"
+    gpgcheck: yes
+    description: Apache Cassandra
+    repo_gpgcheck: yes
+    gpgkey: https://www.apache.org/dist/cassandra/KEYS
 
 - name: Import Join Cluster Tasks
   include: join_cluster.yml
@@ -69,25 +87,7 @@
     - ansible_memtotal_mb is defined
     - ansible_processor_vcpus is defined
 
-- name: Install the Cassandra Package (Package)
-  # Retries are in this as the cache has been seen to still be updating when
-  # this task gets to be executed.
-  package:
-    name: "{{ cassandra_package }}"
-  delay: "{{ cassandra_task_delay }}"
-  retries: "{{ cassandra_task_retries }}"
-  register: cassandra_pkg_install_result
-  until: cassandra_pkg_install_result is succeeded
-  when:
-    - cassandra_install_packages|bool
-    - ansible_os_family is defined
-    - ansible_os_family == 'RedHat'
-    - ansible_pkg_mgr == 'dnf'
-    - not ansible_check_mode
-
-- name: Install the Cassandra Package (YUM)
-  # Retries are in this as the cache has been seen to still be updating when
-  # this task gets to be executed.
+- name: Install the Cassandra Package
   yum:
     name: "{{ cassandra_package }}"
     update_cache: yes
@@ -96,24 +96,7 @@
   register: cassandra_yum_install_result
   until: cassandra_yum_install_result is succeeded
   when:
-    - cassandra_install_packages|bool
-    - ansible_os_family is defined
-    - ansible_os_family == 'RedHat'
-    - ansible_pkg_mgr == 'yum'
-    - not ansible_check_mode
-
-- name: Install the Cassandra Package (Apt)
-  apt:
-    name: "{{ cassandra_package }}"
-    cache_valid_time: 600
-  register: cassandra_remote_status
-  until: cassandra_remote_status is succeeded
-  delay: "{{ cassandra_task_delay }}"
-  retries: "{{ cassandra_task_retries }}"
-  when:
-    - cassandra_install_packages|bool
-    - ansible_os_family is defined
-    - ansible_os_family == 'Debian'
+    - cassandra_install_packages | bool
     - not ansible_check_mode
 
 - name: Systemd Workaround
@@ -123,18 +106,9 @@
     owner: root
     group: root
     mode: 0644
-  when: cassandra_systemd_enabled|bool
+  when: cassandra_systemd_enabled | bool
   notify:
     - cassandra_restart_service
-
-- name: CASSANDRA-15770 Workaround
-  lineinfile:
-    line: '    start-stop-daemon -K -u cassandra -p "$PIDFILE" -R TERM/30/KILL/5 >/dev/null'
-    path: /etc/init.d/cassandra
-    regexp: '^.*start-stop-daemon -K.*$'
-  when:
-    - cassandra_15770_workaround | bool
-    - not ansible_check_mode
 
 - name: Custom Directories
   include: create_custom_directory.yml
@@ -144,22 +118,11 @@
   when:
     - cassandra_directories is defined
 
-- name: Set Default Configuration File Location (Debian)
-  set_fact:
-    cassandra_configuration_directory: /etc/cassandra
-    cassandra_configuration_file: /etc/cassandra/cassandra.yaml
-  when:
-    - ansible_os_family is defined
-    - ansible_os_family == 'Debian'
-    - cassandra_configuration_file is not defined
-
-- name: Set Default Configuration File Location (RedHat)
+- name: Set Default Configuration File Location
   set_fact:
     cassandra_configuration_directory: /etc/cassandra/default.conf
     cassandra_configuration_file: /etc/cassandra/default.conf/cassandra.yaml
   when:
-    - ansible_os_family is defined
-    - ansible_os_family == 'RedHat'
     - cassandra_configuration_file is not defined
 
 - name: Apply Cassandra Configuration
@@ -205,7 +168,7 @@
   notify:
     - cassandra_restart_service
 
-- name: Ensure the Service is in the Required State (RedHat)
+- name: Ensure the Service is in the Required State
   systemd:
     name: cassandra
     enabled: "{{ cassandra_service_enabled }}"
@@ -213,15 +176,3 @@
     state: "{{ cassandra_service_state }}"
   when:
     - not ansible_check_mode
-    - ansible_os_family is defined
-    - ansible_os_family == 'RedHat'
-
-- name: Ensure the Service is in the Required State (Debian)
-  service:
-    name: cassandra
-    enabled: "{{ cassandra_service_enabled }}"
-    state: "{{ cassandra_service_state }}"
-  when:
-    - not ansible_check_mode
-    - ansible_os_family is defined
-    - ansible_os_family == 'Debian'
