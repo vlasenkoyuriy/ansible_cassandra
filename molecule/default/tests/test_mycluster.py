@@ -26,12 +26,12 @@ def test_config_file(host):
     f = host.file('%s/cassandra.yaml' % get_config_path(host))
     assert f.exists
     assert f.is_file
-    assert f.contains('cluster_name: MyCassandraCluster')
+    assert f.contains('cluster_name: TestCluster')
 
 
 def test_cluster_name(host):
     """Test that the cluster name has been set correctly."""
     cmd = host.run('nodetool describecluster')
     assert cmd.rc == 0
-    matches = re.findall('Name: MyCassandraCluster', cmd.stdout)
+    matches = re.findall('Name: TestCluster', cmd.stdout)
     assert len(matches) >= 1

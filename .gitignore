@@ -6,3 +6,4 @@
 Gemfile.lock
 molecule/default/molecule.yml
 pytestdebug.log
+.cache

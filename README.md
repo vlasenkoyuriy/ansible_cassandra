@@ -174,7 +174,7 @@ configuration:
   vars:
     cassandra_configuration:
       authenticator: PasswordAuthenticator
-      cluster_name: MyCassandraCluster
+      cluster_name: TestCluster
       commitlog_directory: /data/cassandra/commitlog
       commitlog_sync: periodic
       commitlog_sync_period_in_ms: 10000
